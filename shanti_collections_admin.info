@@ -1,0 +1,6 @@
+name = SHANTI Collections Admin
+description = Provide config information for SHANTI Collections
+package = SHANTI
+core = 7.x
+
+dependencies[] = shanti_collections

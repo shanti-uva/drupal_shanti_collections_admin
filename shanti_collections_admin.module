@@ -1,0 +1,68 @@
+<?php
+
+// Need to get this from a function 
+define('SHANTI_COLLECTIONS_ADMIN_OG_FIELD', 'field_og_collection_ref');
+define('SHANTI_COLLECTIONS_ADMIN_OG_PARENT_FIELD', 'field_og_parent_collection_ref');
+
+function shanti_collections_admin_menu()
+{
+    return array(
+        'admin/config/content/shanti_collections_admin' => array(
+            'title' => 'SHANTI Collections Admin',
+            'description'       => 'Specify content types for Collections and Subcollections.',
+            'page callback'     => 'drupal_get_form',
+            'page arguments'    => array('shanti_collections_admin_admin'),
+            'access arguments'  => array('administer shanti_collections_admin'),
+            'type'              => MENU_NORMAL_ITEM,
+        ),
+        'shanti_collections_admin/test' => array(
+            'title'             => 'SHANTI Collections Testing',
+            'description'       => 'A test page',
+            'page callback'     => 'shanti_collections_admin_test',
+            'access arguments'  => array('administer shanti_collections_admin'),
+            'type'              => MENU_NORMAL_ITEM,
+        ),        
+    );
+}
+
+function shanti_collections_admin_admin() 
+{
+  $form['shanti_collections_admin_content_types'] = array(
+    '#type'           => 'checkboxes',
+    '#title'          => t('Content Types'),
+    '#options'        => shanti_collections_admin_get_content_types(),
+    '#default_value'  => variable_get('shanti_collections_admin_content_types'),
+    '#description'    => t('Content Types that can be added to Collections. Put each one on a new line.'),
+    '#required'       => TRUE,
+  );
+  $form['shanti_collections_admin_content_views'] = array(
+    '#type'           => 'textarea',
+    '#title'          => t('Views'),
+    '#default_value'  => variable_get('shanti_collections_admin_content_views'),
+    '#cols'           => 80,
+    '#rows'           => 5,
+    '#resizable'      => TRUE,
+    '#description'    => t('A list of views to be included on the Collections and Subcollections pages. Put each one on a new line.'),
+    '#required'       => TRUE,
+  );
+  return system_settings_form($form);  
+}
+
+function shanti_collections_admin_get_content_types($og_field = SHANTI_COLLECTIONS_ADMIN_OG_FIELD)
+{
+    $info = field_info_fields();
+    $content_types = $info[$og_field]['bundles']['node'];
+    $return = array();
+    foreach($content_types as $ctype) {
+        $return[$ctype] = $ctype;
+    }
+    return $return;
+}
+
+function shanti_collections_admin_test($og_field = SHANTI_COLLECTIONS_ADMIN_OG_FIELD)
+{
+    $info = variable_get('shanti_collections_admin_content_types');
+    dpm($info);
+    return "Testing";
+}
+
