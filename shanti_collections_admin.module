@@ -1,19 +1,38 @@
 <?php
 
-// Need to get this from a function 
-define('SHANTI_COLLECTIONS_ADMIN_OG_FIELD', 'field_og_collection_ref');
-define('SHANTI_COLLECTIONS_ADMIN_OG_PARENT_FIELD', 'field_og_parent_collection_ref');
-
 function shanti_collections_admin_menu()
 {
     return array(
         'admin/config/content/shanti_collections_admin' => array(
             'title' => 'SHANTI Collections Admin',
-            'description'       => 'Specify content types for Collections and Subcollections.',
-            'page callback'     => 'drupal_get_form',
-            'page arguments'    => array('shanti_collections_admin_admin'),
+            'description'       => 'Define variables for Collections and Subcollections.',
+            'page callback'     => 'shanti_collections_admin_overview',
             'access arguments'  => array('administer shanti_collections_admin'),
             'type'              => MENU_NORMAL_ITEM,
+        ),
+        'admin/config/content/shanti_collections_admin/fields' => array(
+            'title' => 'Fields',
+            'description'       => 'Specify OG fields for Collections and Subcollections.',
+            'page callback'     => 'drupal_get_form',
+            'page arguments'    => array('shanti_collections_admin_fields'),
+            'access arguments'  => array('administer shanti_collections_admin'),
+            'type'              => MENU_LOCAL_TASK,
+        ),
+        'admin/config/content/shanti_collections_admin/types' => array(
+            'title' => 'Types',
+            'description'       => 'Specify content types for Collections and Subcollections.',
+            'page callback'     => 'drupal_get_form',
+            'page arguments'    => array('shanti_collections_admin_types'),
+            'access arguments'  => array('administer shanti_collections_admin'),
+            'type'              => MENU_LOCAL_TASK,
+        ),
+        'admin/config/content/shanti_collections_admin/views' => array(
+            'title' => 'Views',
+            'description'       => 'Specify views for Collections and Subcollections.',
+            'page callback'     => 'drupal_get_form',
+            'page arguments'    => array('shanti_collections_admin_views'),
+            'access arguments'  => array('administer shanti_collections_admin'),
+            'type'              => MENU_LOCAL_TASK,
         ),
         'shanti_collections_admin/test' => array(
             'title'             => 'SHANTI Collections Testing',
@@ -25,44 +44,202 @@ function shanti_collections_admin_menu()
     );
 }
 
-function shanti_collections_admin_admin() 
+function shanti_collections_admin_overview()
+{
+	# Handle content types array
+	$ctypes = array();
+	foreach(variable_get('shanti_collections_admin_content_types') as $k => $v) {
+		if ($v) {
+			$ctypes[] = $k;
+		}
+	}
+	
+	$items = array(
+		'#theme' => 'table',
+		'#rows' => array(
+			array(t('OG Collection Field'), variable_get('shanti_collections_admin_collection_field')),
+			array(t('OG Parent Collection Field'),variable_get('shanti_collections_admin_collection_parent_field')),
+			array(t('Content Types'), join(",", $ctypes)),
+			array('Content Views', variable_get('shanti_collections_admin_content_views')),
+			array('Members View', variable_get('shanti_collections_admin_members_view'))
+		),
+	);
+	return $items;	
+}
+
+function shanti_collections_admin_fields() 
+{
+  $form['shanti_collections_admin_collection_field'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Collection Field'),
+    '#default_value'  => variable_get('shanti_collections_admin_collection_field','field_og_collection_ref'),
+    '#size'           => 60,
+    '#description'    => t('The OG field that links a media asset to a Collection or Subcollection.'),
+    '#required'       => TRUE,
+  );
+  $form['shanti_collections_admin_collection_parent_field'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Parent Collection Field'),
+    '#default_value'  => variable_get('shanti_collections_admin_collection_parent_field','field_og_parent_collection_ref'),
+    '#size'           => 60,
+    '#description'    => t('The OG field that links a Subcollection to a parent Collection.'),
+    '#required'       => TRUE,
+  );
+  $form['#validate'] = array('shanti_collections_admin_fields_validate');
+  return system_settings_form($form);
+}
+
+function shanti_collections_admin_fields_validate($form, &$form_state)
+{
+	$f1 = $form_state['values']['shanti_collections_admin_collection_field'];
+	$f2 = $form_state['values']['shanti_collections_admin_collection_parent_field'];
+	$f1_info = field_info_field($f1);
+	$f2_info = field_info_field($f2);
+	if (!$f1_info) 
+	{
+		form_set_error('OG Collection Field', t("<tt>$f1</tt> was not found."));
+	}
+	if(!$f2_info) 
+	{
+		form_set_error('OG Parent Collection Field', t("<tt>$f2</tt> was not found."));
+	}
+}
+
+function shanti_collections_admin_types() 
 {
   $form['shanti_collections_admin_content_types'] = array(
     '#type'           => 'checkboxes',
     '#title'          => t('Content Types'),
     '#options'        => shanti_collections_admin_get_content_types(),
     '#default_value'  => variable_get('shanti_collections_admin_content_types'),
-    '#description'    => t('Content Types that can be added to Collections. Put each one on a new line.'),
-    '#required'       => TRUE,
+    '#description'    => t('Content Types that can be added to Collections. If nothing appears here, you many need to change your fields.'),
+    '#required'       => TRUE, # THIS IS BECAUSE IT DEPENDS ON THE PREVIOUS TWO
   );
-  $form['shanti_collections_admin_content_views'] = array(
-    '#type'           => 'textarea',
-    '#title'          => t('Views'),
-    '#default_value'  => variable_get('shanti_collections_admin_content_views'),
-    '#cols'           => 80,
-    '#rows'           => 5,
-    '#resizable'      => TRUE,
-    '#description'    => t('A list of views to be included on the Collections and Subcollections pages. Put each one on a new line.'),
-    '#required'       => TRUE,
-  );
+  $form['#validate'] = array('shanti_collections_admin_types_validate');
   return system_settings_form($form);  
 }
 
-function shanti_collections_admin_get_content_types($og_field = SHANTI_COLLECTIONS_ADMIN_OG_FIELD)
+function shanti_collections_admin_types_validate($form, &$form_state)
 {
+	# Nothing really to check
+}
+
+
+function shanti_collections_admin_views() 
+{
+  $form['shanti_collections_admin_content_views'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Collection Items View'),
+    '#default_value'  => variable_get('shanti_collections_admin_content_views'),
+    '#size'           => 60,
+    '#description'    => t('A view to be included on the Collections and Subcollections pages.<br />
+    						Enter the machine name of the view plus the the display ID separated by a space.<br />
+    						<b>Make sure this view includes all content types chose above and accepts multiple arguments!</b>'),
+    '#required'       => TRUE,
+  );
+  $form['shanti_collections_admin_members_view'] = array(
+    '#type'           => 'textfield',
+    '#title'          => t('Collection Members View'),
+    '#default_value'  => variable_get('shanti_collections_admin_members_view','collection_members panel_pane_2'),
+    '#size'           => 60,
+    '#description'    => t('A view to be included on the Collections and Subcollections pages.<br />
+    						Enter the machine name of the view plus the the display ID separated by a space.'),
+    '#required'       => TRUE,
+  );
+  $form['#validate'] = array('shanti_collections_admin_views_validate');
+  return system_settings_form($form);  
+}
+
+function shanti_collections_admin_views_validate($form, &$form_state)
+{
+	$v1 = preg_split("/\s+/",$form_state['values']['shanti_collections_admin_content_views']);
+	$v2 = preg_split("/\s+/",$form_state['values']['shanti_collections_admin_members_view']);
+	$v1_info = views_get_view($v1[0]);	
+	$v2_info = views_get_view($v2[0]);
+	if (!$v1_info) 
+	{
+		form_set_error('Content View', t("<tt>$v1[0]</tt> was not found."));
+	}
+	if(!$v2_info) 
+	{
+		form_set_error('Members View', t("<tt>$v2[0]</tt> was not found."));
+	}
+	if ($v1_info && !$v1_info->display[$v1[1]])
+	{
+		form_set_error('Members View Display', t("<tt>$v1[1]</tt> was not found."));		
+	}
+	if ($v2_info && !$v2_info->display[$v2[1]])
+	{
+		form_set_error('Members View Display', t("<tt>$v2[1]</tt> was not found."));		
+	}
+}
+
+/**
+ * Helper functions
+ */
+
+function shanti_collections_admin_get_content_types()
+{
+	$og_field = variable_get('shanti_collections_admin_collection_field','field_og_collection_ref');
     $info = field_info_fields();
     $content_types = $info[$og_field]['bundles']['node'];
     $return = array();
-    foreach($content_types as $ctype) {
+    foreach($content_types as $ctype) 
+    {
         $return[$ctype] = $ctype;
     }
     return $return;
 }
 
-function shanti_collections_admin_test($og_field = SHANTI_COLLECTIONS_ADMIN_OG_FIELD)
+function shanti_collections_admin_test()
 {
+	$og_field = variable_get('shanti_collections_admin_collection_field','field_og_collection_ref');
     $info = variable_get('shanti_collections_admin_content_types');
     dpm($info);
     return "Testing";
+}
+
+function shanti_collections_admin_get_collection_items_view($nid)
+{
+	$args = array();
+	$args[] = $nid;
+	$v1 = views_get_view('collections'); 	 # This view is part of the feature
+	$v1->set_display('views_data_export_1'); # This display is part of the feature
+	$v1->set_arguments(array($nid));
+	$v1->pre_execute();
+	$v1->execute();
+	foreach ($v1->result as $item) { $args[] = $item->nid; }
+	$arg_str = implode(",",$args);	
+	$view = preg_split("/\s+/", variable_get('shanti_collections_admin_content_views'));
+	$v2 = views_embed_view($view[0],$view[1],$arg_str);
+	return $v2;	
+}
+
+/**
+ * For a given Collection or Subcollection, get all the members associated with it.
+ * In the case of Subcollections, this means get a distinct union of both the Collection
+ * and Subcollection member set.
+ */
+function shanti_collections_admin_get_distinct_members($gids = array())
+{
+	$distinct_members = array();
+	foreach($gids as $gid)
+	{
+		$members = shanti_collections_admin_get_users_in_group($gid);
+		foreach ($members as $member) 
+		{
+			$distinct_members[$member->uid] = $member;
+		}	
+	}
+	return $distinct_members;
+}
+
+function shanti_collections_admin_get_users_in_group($gid) {
+ 	$query = db_select('users', 'u');
+  	$query->condition('u.uid', 0, '<>')
+    	->condition('u.status', 1, '=')
+    	->fields('u', array('uid', 'name'))
+    	->join('og_membership', 'ogm', "ogm.gid = :gid AND u.uid = ogm.etid AND ogm.entity_type = 'user'", array(':gid' => $gid));
+	return $query->execute();
 }
 
