@@ -40,7 +40,7 @@ function shanti_collections_admin_menu()
             'page callback'     => 'shanti_collections_admin_test',
             'access arguments'  => array('administer shanti_collections_admin'),
             'type'              => MENU_NORMAL_ITEM,
-        ),        
+        ),
     );
 }
 
@@ -53,7 +53,7 @@ function shanti_collections_admin_overview()
 			$ctypes[] = $k;
 		}
 	}
-	
+
 	$items = array(
 		'#theme' => 'table',
 		'#rows' => array(
@@ -64,10 +64,10 @@ function shanti_collections_admin_overview()
 			array('Members View', variable_get('shanti_collections_admin_members_view'))
 		),
 	);
-	return $items;	
+	return $items;
 }
 
-function shanti_collections_admin_fields() 
+function shanti_collections_admin_fields()
 {
   $form['shanti_collections_admin_collection_field'] = array(
     '#type'           => 'textfield',
@@ -95,17 +95,17 @@ function shanti_collections_admin_fields_validate($form, &$form_state)
 	$f2 = $form_state['values']['shanti_collections_admin_collection_parent_field'];
 	$f1_info = field_info_field($f1);
 	$f2_info = field_info_field($f2);
-	if (!$f1_info) 
+	if (!$f1_info)
 	{
 		form_set_error('OG Collection Field', t("<tt>$f1</tt> was not found."));
 	}
-	if(!$f2_info) 
+	if(!$f2_info)
 	{
 		form_set_error('OG Parent Collection Field', t("<tt>$f2</tt> was not found."));
 	}
 }
 
-function shanti_collections_admin_types() 
+function shanti_collections_admin_types()
 {
   $form['shanti_collections_admin_content_types'] = array(
     '#type'           => 'checkboxes',
@@ -116,7 +116,7 @@ function shanti_collections_admin_types()
     '#required'       => TRUE, # THIS IS BECAUSE IT DEPENDS ON THE PREVIOUS TWO
   );
   $form['#validate'] = array('shanti_collections_admin_types_validate');
-  return system_settings_form($form);  
+  return system_settings_form($form);
 }
 
 function shanti_collections_admin_types_validate($form, &$form_state)
@@ -125,7 +125,7 @@ function shanti_collections_admin_types_validate($form, &$form_state)
 }
 
 
-function shanti_collections_admin_views() 
+function shanti_collections_admin_views()
 {
   $form['shanti_collections_admin_content_views'] = array(
     '#type'           => 'textfield',
@@ -147,30 +147,30 @@ function shanti_collections_admin_views()
     '#required'       => TRUE,
   );
   $form['#validate'] = array('shanti_collections_admin_views_validate');
-  return system_settings_form($form);  
+  return system_settings_form($form);
 }
 
 function shanti_collections_admin_views_validate($form, &$form_state)
 {
 	$v1 = preg_split("/\s+/",$form_state['values']['shanti_collections_admin_content_views']);
 	$v2 = preg_split("/\s+/",$form_state['values']['shanti_collections_admin_members_view']);
-	$v1_info = views_get_view($v1[0]);	
+	$v1_info = views_get_view($v1[0]);
 	$v2_info = views_get_view($v2[0]);
-	if (!$v1_info) 
+	if (!$v1_info)
 	{
 		form_set_error('Content View', t("<tt>$v1[0]</tt> was not found."));
 	}
-	if(!$v2_info) 
+	if(!$v2_info)
 	{
 		form_set_error('Members View', t("<tt>$v2[0]</tt> was not found."));
 	}
 	if ($v1_info && !$v1_info->display[$v1[1]])
 	{
-		form_set_error('Members View Display', t("<tt>$v1[1]</tt> was not found."));		
+		form_set_error('Members View Display', t("<tt>$v1[1]</tt> was not found."));
 	}
 	if ($v2_info && !$v2_info->display[$v2[1]])
 	{
-		form_set_error('Members View Display', t("<tt>$v2[1]</tt> was not found."));		
+		form_set_error('Members View Display', t("<tt>$v2[1]</tt> was not found."));
 	}
 }
 
@@ -184,7 +184,7 @@ function shanti_collections_admin_get_content_types()
     $info = field_info_fields();
     $content_types = $info[$og_field]['bundles']['node'];
     $return = array();
-    foreach($content_types as $ctype) 
+    foreach($content_types as $ctype)
     {
         $return[$ctype] = $ctype;
     }
@@ -209,10 +209,10 @@ function shanti_collections_admin_get_collection_items_view($nid)
 	$v1->pre_execute();
 	$v1->execute();
 	foreach ($v1->result as $item) { $args[] = $item->nid; }
-	$arg_str = implode(",",$args);	
+	$arg_str = implode(",",$args);
 	$view = preg_split("/\s+/", variable_get('shanti_collections_admin_content_views'));
 	$v2 = views_embed_view($view[0],$view[1],$arg_str);
-	return $v2;	
+	return $v2;
 }
 
 /**
@@ -226,10 +226,10 @@ function shanti_collections_admin_get_distinct_members($gids = array())
 	foreach($gids as $gid)
 	{
 		$members = shanti_collections_admin_get_users_in_group($gid);
-		foreach ($members as $member) 
+		foreach ($members as $member)
 		{
 			$distinct_members[$member->uid] = $member;
-		}	
+		}
 	}
 	return $distinct_members;
 }
@@ -242,4 +242,3 @@ function shanti_collections_admin_get_users_in_group($gid) {
     	->join('og_membership', 'ogm', "ogm.gid = :gid AND u.uid = ogm.etid AND ogm.entity_type = 'user'", array(':gid' => $gid));
 	return $query->execute();
 }
-
