@@ -60,8 +60,8 @@ function shanti_collections_admin_overview()
 			array(t('OG Collection Field'), variable_get('shanti_collections_admin_collection_field')),
 			array(t('OG Parent Collection Field'),variable_get('shanti_collections_admin_collection_parent_field')),
 			array(t('Content Types'), join(",", $ctypes)),
-			array('Content Views', variable_get('shanti_collections_admin_content_views')),
-			array('Members View', variable_get('shanti_collections_admin_members_view'))
+			array(t('Content Views'), variable_get('shanti_collections_admin_content_views')),
+			array(t('Members View'), variable_get('shanti_collections_admin_members_view'))
 		),
 	);
 	return $items;
@@ -130,7 +130,7 @@ function shanti_collections_admin_views()
   $form['shanti_collections_admin_content_views'] = array(
     '#type'           => 'textfield',
     '#title'          => t('Collection Items View'),
-    '#default_value'  => variable_get('shanti_collections_admin_content_views'),
+    '#default_value'  => variable_get('shanti_collections_admin_content_views','content_by_collection panel_pane_1'),
     '#size'           => 60,
     '#description'    => t('A view to be included on the Collections and Subcollections pages.<br />
     						Enter the machine name of the view plus the the display ID separated by a space.<br />
